@@ -1,130 +1,126 @@
-class FilaEspera:
-    def __init__(self, capacidade=None):
+class Queue:
+    def __init__(self, max_size=None):
         """
-        Estrutura de dados FIFO (First In, First Out).
-        
+        Fila baseada em princípio FIFO (First In, First Out).
+
         Parâmetros:
-            capacidade (int | None): Limite de elementos suportados.
-                                     Se None, a fila cresce sem restrição.
+            max_size (int | None): Número máximo de elementos aceitos.
+                                   Quando None, a fila não possui limite.
         """
-        self._buffer = []
-        self._capacidade = capacidade
+        self._dados = []
+        self._max_size = max_size
 
-    def inserir(self, elemento):
+    def enqueue(self, item):
         """
-        Insere um elemento no final da fila.
-        Dispara OverflowError caso a capacidade máxima já tenha sido atingida.
+        Insere um novo item ao final da fila.
+
+        Lança:
+            OverflowError: se max_size foi definido e a fila já está cheia.
         """
-        if self.esta_cheia():
+        if self.is_full():
             raise OverflowError(
-                f"Capacidade máxima ({self._capacidade}) atingida. Inserção negada."
+                f"Limite de {self._max_size} elemento(s) atingido. "
+                "Remova um item antes de inserir outro."
             )
-        self._buffer.append(elemento)
+        self._dados.append(item)
 
-    def remover(self):
+    def dequeue(self):
         """
-        Retira e devolve o elemento da frente da fila (ordem FIFO).
-        Dispara IndexError se não houver elementos.
-        """
-        if self.esta_vazia():
-            raise IndexError("Operação inválida: nenhum elemento para remover.")
-        return self._buffer.pop(0)
+        Remove e retorna o elemento do início da fila (ordem FIFO).
 
-    def frente(self):
+        Lança:
+            IndexError: se chamado em uma fila vazia.
         """
-        Consulta o próximo elemento sem retirá-lo da fila.
-        Dispara IndexError se a fila estiver vazia.
+        if self.is_empty():
+            raise IndexError("dequeue() não permitido: a fila está vazia.")
+        return self._dados.pop(0)
+
+    def peek(self):
         """
-        if self.esta_vazia():
-            raise IndexError("Operação inválida: a fila não contém elementos.")
-        return self._buffer[0]
+        Retorna o elemento do início da fila sem removê-lo.
 
-    def esta_vazia(self):
-        """Indica se a fila está sem elementos."""
-        return not self._buffer
+        Lança:
+            IndexError: se chamado em uma fila vazia.
+        """
+        if self.is_empty():
+            raise IndexError("peek() não permitido: a fila está vazia.")
+        return self._dados[0]
 
-    def esta_cheia(self):
-        """Indica se a fila atingiu o limite de capacidade definido."""
-        if self._capacidade is None:
+    def is_empty(self):
+        """Retorna True se não houver elementos na fila; False caso contrário."""
+        return not self._dados
+
+    def is_full(self):
+        """
+        Retorna True se a fila atingiu max_size; False caso contrário.
+        Sempre False quando max_size não foi definido.
+        """
+        if self._max_size is None:
             return False
-        return len(self._buffer) >= self._capacidade
+        return len(self._dados) >= self._max_size
 
-    def total(self):
-        """Retorna a quantidade de elementos presentes na fila."""
-        return len(self._buffer)
+    def size(self):
+        """Retorna o número de elementos atualmente armazenados."""
+        return len(self._dados)
 
-    def esvaziar(self):
-        """Remove todos os elementos da fila de uma vez."""
-        self._buffer.clear()
+    def clear(self):
+        """Descarta todos os elementos, deixando a fila vazia."""
+        self._dados.clear()
 
 
 # ---------------------------------------------------------------------------
-# Ponto de entrada do programa
+# Testes — executados apenas quando o arquivo é chamado diretamente
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    separador = "=" * 52
+    linha = "-" * 48
 
-    print(separador)
-    print("   IMPLEMENTAÇÃO DE FILA — TESTES E VALIDAÇÕES")
-    print(separador)
+    print("TESTE 1 — Enfileiramento e consulta básica")
+    print(linha)
+    fila = Queue()
+    fila.enqueue(10)
+    fila.enqueue(20)
+    fila.enqueue(30)
+    print(f"Elementos na fila : {fila.size()}")       # esperado: 3
+    print(f"Primeiro elemento : {fila.peek()}")        # esperado: 10
+    print(f"Fila vazia?       : {fila.is_empty()}")    # esperado: False
 
-    # -----------------------------------------------------------------------
-    # TESTE 1 — Fila sem limite de capacidade
-    # -----------------------------------------------------------------------
-    print("\n[TESTE 1] Fila de atendimento sem restrição de tamanho")
+    print(f"\nTESTE 2 — Remoção em ordem FIFO")
+    print(linha)
+    print(f"dequeue() -> {fila.dequeue()}")            # esperado: 10
+    print(f"dequeue() -> {fila.dequeue()}")            # esperado: 20
+    print(f"Restam {fila.size()} elemento(s) na fila") # esperado: 1
 
-    atendimento = FilaEspera()
-    atendimento.inserir("Ana")
-    atendimento.inserir("Bruno")
-    atendimento.inserir("Carlos")
+    print(f"\nTESTE 3 — Limpeza com clear()")
+    print(linha)
+    fila.clear()
+    print(f"Tamanho após clear() : {fila.size()}")     # esperado: 0
+    print(f"Fila vazia?          : {fila.is_empty()}") # esperado: True
 
-    print(f"  Elementos na fila   : {atendimento.total()}")
-    print(f"  Próximo na fila     : {atendimento.frente()}")
-    print(f"  Removendo elemento  : {atendimento.remover()}")
-    print(f"  Removendo elemento  : {atendimento.remover()}")
-    print(f"  Elementos restantes : {atendimento.total()}")
-    print(f"  Fila vazia?         : {atendimento.esta_vazia()}")
-
-    # -----------------------------------------------------------------------
-    # TESTE 2 — Esvaziamento manual da fila
-    # -----------------------------------------------------------------------
-    print("\n[TESTE 2] Limpeza completa da fila")
-
-    atendimento.esvaziar()
-    print(f"  Elementos após limpeza : {atendimento.total()}")
-    print(f"  Fila vazia?            : {atendimento.esta_vazia()}")
-
-    # -----------------------------------------------------------------------
-    # TESTE 3 — Remoção e consulta em fila vazia (IndexError esperado)
-    # -----------------------------------------------------------------------
-    print("\n[TESTE 3] Operações proibidas em fila vazia")
+    print(f"\nTESTE 4 — IndexError ao operar fila vazia")
+    print(linha)
+    try:
+        fila.dequeue()
+    except IndexError as erro:
+        print(f"dequeue() -> IndexError : {erro}")
 
     try:
-        atendimento.remover()
-    except IndexError as exc:
-        print(f"  remover() -> IndexError capturado : {exc}")
+        fila.peek()
+    except IndexError as erro:
+        print(f"peek()    -> IndexError : {erro}")
+
+    print(f"\nTESTE 5 — OverflowError ao exceder capacidade")
+    print(linha)
+    fila_limitada = Queue(max_size=2)
+    fila_limitada.enqueue("req_1")
+    fila_limitada.enqueue("req_2")
+    print(f"is_full() com 2/2 elementos : {fila_limitada.is_full()}")  # esperado: True
 
     try:
-        atendimento.frente()
-    except IndexError as exc:
-        print(f"  frente()  -> IndexError capturado : {exc}")
+        fila_limitada.enqueue("req_3")
+    except OverflowError as erro:
+        print(f"enqueue() -> OverflowError : {erro}")
 
-    # -----------------------------------------------------------------------
-    # TESTE 4 — Inserção além da capacidade (OverflowError esperado)
-    # -----------------------------------------------------------------------
-    print("\n[TESTE 4] Inserção em fila com capacidade esgotada")
-
-    impressora = FilaEspera(capacidade=2)
-    impressora.inserir("relatorio.pdf")
-    impressora.inserir("contrato.pdf")
-    print(f"  Capacidade esgotada? : {impressora.esta_cheia()}")
-
-    try:
-        impressora.inserir("apresentacao.pdf")
-    except OverflowError as exc:
-        print(f"  inserir() -> OverflowError capturado : {exc}")
-
-    print(f"\n{separador}")
-    print("   TODOS OS TESTES CONCLUÍDOS COM ÊXITO")
-    print(separador)
+    print(f"\n{'=' * 48}")
+    print("  Todos os 5 testes executados com sucesso.")
+    print(f"{'=' * 48}")
